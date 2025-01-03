@@ -19,6 +19,8 @@
 # same gate.
 ############################################################
 
+from heapq import heappush, heappop
+
 
 class Aircraft:
     """
@@ -45,10 +47,12 @@ class Aircraft:
 
 def manual_sort_by_arrival(aircraft_list):
     """
-    Manually sort the list of Aircraft objects in ascending order
-    by their arrival time. This function does NOT use Python's
-    built-in sort or sorted methods; it uses a simple
-    "selection sort" approach to keep it library-free.
+    Sort the list of Aircraft objects in ascending order by their arrival time
+    using the QuickSort algorithm. This implementation uses the divide-and-conquer
+    strategy with a pivot element.
+
+    Time Complexity: O(n log n) average case
+    Space Complexity: O(log n) due to recursion stack
 
     Args:
         aircraft_list (list): A list of Aircraft objects to be sorted
@@ -56,75 +60,89 @@ def manual_sort_by_arrival(aircraft_list):
     Returns:
         list: The sorted list of Aircraft objects by arrival time
     """
-    # We will implement a basic selection sort
-    n = len(aircraft_list)
-    for i in range(n):
-        # Assume the minimum is at position i
-        min_index = i
-        # Search for the aircraft with the smallest arrival time from i to n-1
-        for j in range(i + 1, n):
-            if aircraft_list[j].arrival < aircraft_list[min_index].arrival:
-                min_index = j
-        
-        # If we found a smaller element, swap
-        if min_index != i:
-            aircraft_list[i], aircraft_list[min_index] = aircraft_list[min_index], aircraft_list[i]
+    def quicksort(arr, low, high):
+        if low < high:
+            # Find the partition index
+            pi = partition(arr, low, high)
+            
+            # Recursively sort the left part
+            quicksort(arr, low, pi - 1)
+            # Recursively sort the right part
+            quicksort(arr, pi + 1, high)
     
+    def partition(arr, low, high):
+        # Choose the rightmost element as pivot
+        pivot = arr[high].arrival
+        i = low - 1  # Index of smaller element
+        
+        for j in range(low, high):
+            # If current element is smaller than or equal to pivot
+            if arr[j].arrival <= pivot:
+                i += 1  # Increment index of smaller element
+                arr[i], arr[j] = arr[j], arr[i]
+        
+        # Place pivot in its correct position
+        arr[i + 1], arr[high] = arr[high], arr[i + 1]
+        return i + 1
+    
+    # Start QuickSort
+    quicksort(aircraft_list, 0, len(aircraft_list) - 1)
     return aircraft_list
 
 def interval_partitioning(aircrafts):
     """
-    Implements the Interval Partitioning algorithm as described 
-    in Kleinberg & Tardos, "Algorithm Design."
+    Implements an optimized Interval Partitioning algorithm using a priority queue
+    for O(n log n) time complexity.
 
     Algorithm Steps:
-    1) Sort all intervals (aircraft) by their start time.
-    2) Create a set of 'gates' (initially empty). Each gate will
-       be a list of Aircraft that do not overlap with each other.
-    3) For each aircraft in ascending order of arrival:
-       a) Try to place it into the first gate where it does not
-          overlap with the last assigned aircraft in that gate.
-       b) If no such gate exists, create a new gate and assign 
-          the aircraft to it.
+    1) Sort all aircraft by arrival time using QuickSort - O(n log n)
+    2) Use a priority queue to track the earliest available time for each gate
+    3) For each aircraft:
+       - If the min gate's available time <= current aircraft's arrival,
+         reuse that gate
+       - Otherwise, open a new gate
+       The priority queue operations take O(log n), done n times: O(n log n)
+
+    Total Time Complexity: O(n log n)
+    Space Complexity: O(n) for the priority queue
 
     Args:
         aircrafts (list): List of Aircraft objects
 
     Returns:
-        (num_gates, gate_assignments):
-            num_gates (int): The minimum number of gates required
-            gate_assignments (list): A list of lists, where each
-                                     sub-list represents a gate
-                                     and contains Aircraft objects
+        (num_gates, gate_assignments): Tuple containing:
+            - num_gates (int): Minimum number of gates required
+            - gate_assignments (list): List of lists, each sublist represents
+              aircraft assigned to a gate
     """
-    # 1) Sort the aircraft list by arrival time (manually)
+
+    if not aircrafts:
+        return 0, []
+
+    # 1) Sort aircraft by arrival time - O(n log n)
     sorted_aircrafts = manual_sort_by_arrival(aircrafts)
-
-    # 2) Prepare a structure to store gates (each gate is a list of aircraft)
-    gate_assignments = []
-
-    # 3) Process each aircraft in order of increasing arrival
+    
+    # Initialize data structures
+    gate_assignments = []  # List of lists to store assignments
+    gates_heap = []       # Priority queue storing (departure_time, gate_index)
+    
+    # Process each aircraft in sorted order
     for plane in sorted_aircrafts:
-        # Try to place this aircraft in an existing gate
-        placed = False
-        for gate in gate_assignments:
-            # The plane can be placed in this gate if its arrival time
-            # is >= the departure of the last plane in that gate
-            last_plane_in_gate = gate[-1]
-            if plane.arrival >= last_plane_in_gate.departure:
-                # We can place the plane in this gate
-                gate.append(plane)
-                placed = True
-                break  # No need to check further gates
-        
-        # If not placed in any existing gate, create a new gate
-        if not placed:
-            new_gate = [plane]
-            gate_assignments.append(new_gate)
-
-    # The number of gates is simply the length of gate_assignments
+        # Check if we can reuse an existing gate
+        if gates_heap and gates_heap[0][0] <= plane.arrival:
+            # Get the earliest available gate
+            _, gate_index = heappop(gates_heap)
+            # Add plane to existing gate
+            gate_assignments[gate_index].append(plane)
+            # Update gate's availability time
+            heappush(gates_heap, (plane.departure, gate_index))
+        else:
+            # Need to open a new gate
+            new_gate_index = len(gate_assignments)
+            gate_assignments.append([plane])
+            heappush(gates_heap, (plane.departure, new_gate_index))
+    
     num_gates = len(gate_assignments)
-
     return num_gates, gate_assignments
 
 

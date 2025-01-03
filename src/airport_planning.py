@@ -107,7 +107,7 @@ class AirportPlanningApp(QMainWindow):
         mins = minutes % 60
         return f"{hours:02d}:{mins:02d}"
 
-    def time_str_to_minutes(self, time_str):
+    def to_m(self, time_str):
         """
         Convert an HH:MM time string into an integer
         representing minutes from midnight.
@@ -134,8 +134,8 @@ class AirportPlanningApp(QMainWindow):
         """
         try:
             code = self.code_input.text().strip()
-            arrival = self.time_str_to_minutes(self.arrival_input.text().strip())
-            departure = self.time_str_to_minutes(self.departure_input.text().strip())
+            arrival = self.to_m(self.arrival_input.text().strip())
+            departure = self.to_m(self.departure_input.text().strip())
             
             if departure <= arrival:
                 raise ValueError("Departure must be after arrival")
@@ -370,21 +370,24 @@ class AirportPlanningApp(QMainWindow):
         QMessageBox.information(self, "Success", f"Chart saved as {filename}")
 
     def load_sample_data(self):
-        """
-        (Optional) Load some sample aircraft data to test quickly.
-        """
-        self.aircraft_list = [
-            Aircraft("TC-LSU", 480, 570),   # 08:00 - 09:30
-            Aircraft("TC-JSI", 525, 615),   # 08:45 - 10:15
-            Aircraft("TC-JTR", 540, 660),   # 09:00 - 11:00
-            Aircraft("TC-JOV", 600, 720),   # 10:00 - 12:00
-            Aircraft("TC-NBK", 750, 840),   # 12:30 - 14:00
-            Aircraft("TC-NCL", 780, 930),   # 13:00 - 15:30
-            Aircraft("D-AIDW", 870, 960),   # 14:30 - 16:00
-            Aircraft("SE-ROE", 960, 1080),  # 16:00 - 18:00
+        """Load sample aircraft data with HH:MM time format."""
+        sample_data = [
+            # Format: Aircraft(code, arrival_time, departure_time)
+            
+            Aircraft("a", self.to_m("09:00"), self.to_m("10:30")),
+            Aircraft("b", self.to_m("09:00"), self.to_m("12:30")),
+            Aircraft("d", self.to_m("11:00"), self.to_m("12:30")),
+            Aircraft("e", self.to_m("11:00"), self.to_m("14:00")),
+            Aircraft("f", self.to_m("13:00"), self.to_m("14:30")),
+            Aircraft("g", self.to_m("13:00"), self.to_m("14:30")),
+            Aircraft("h", self.to_m("14:00"), self.to_m("16:30")),
+            Aircraft("i", self.to_m("15:00"), self.to_m("16:30")),
+            Aircraft("j", self.to_m("15:00"), self.to_m("16:30"))
         ]
-        self.update_table()
         
+        self.aircraft_list.extend(sample_data)
+        self.update_table()
+        self.run_planning()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
