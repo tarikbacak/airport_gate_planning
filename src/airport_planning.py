@@ -373,21 +373,22 @@ class AirportPlanningApp(QMainWindow):
         """Load sample aircraft data with HH:MM time format."""
         sample_data = [
             # Format: Aircraft(code, arrival_time, departure_time)
-            
-            Aircraft("a", self.to_m("09:00"), self.to_m("10:30")),
-            Aircraft("b", self.to_m("09:00"), self.to_m("12:30")),
-            Aircraft("d", self.to_m("11:00"), self.to_m("12:30")),
-            Aircraft("e", self.to_m("11:00"), self.to_m("14:00")),
-            Aircraft("f", self.to_m("13:00"), self.to_m("14:30")),
-            Aircraft("g", self.to_m("13:00"), self.to_m("14:30")),
-            Aircraft("h", self.to_m("14:00"), self.to_m("16:30")),
-            Aircraft("i", self.to_m("15:00"), self.to_m("16:30")),
-            Aircraft("j", self.to_m("15:00"), self.to_m("16:30"))
+            Aircraft("TC-LSU", self.to_m("09:00"), self.to_m("10:30")),
+            Aircraft("TC-JSI", self.to_m("09:00"), self.to_m("12:30")),
+            Aircraft("TC-JTR", self.to_m("09:00"), self.to_m("10:30")),
+            Aircraft("TC-JOV", self.to_m("11:00"), self.to_m("12:30")),
+            Aircraft("TC-NBK", self.to_m("11:00"), self.to_m("14:00")),
+            Aircraft("TC-NCL", self.to_m("13:00"), self.to_m("14:30")),
+            Aircraft("TC-NCO", self.to_m("13:00"), self.to_m("14:30")),
+            Aircraft("TC-NCR", self.to_m("14:00"), self.to_m("16:30")),
+            Aircraft("TC-NDB", self.to_m("15:00"), self.to_m("16:30")),
+            Aircraft("TC-NDR", self.to_m("15:00"), self.to_m("16:30"))
         ]
-        
+
         self.aircraft_list.extend(sample_data)
         self.update_table()
         self.run_planning()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -45,11 +45,83 @@ class Aircraft:
         """
         return f"{self.code} ({self.arrival}-{self.departure})"
 
+def to_m(time_str):
+    """
+    Convert an HH:MM time string into an integer
+    representing minutes from midnight.
+    """
+    hours, mins = map(int, time_str.split(":"))
+    return hours * 60 + mins
+
+
+def to_hhmm(minutes):
+    """
+    Convert minutes since midnight to HH:MM format
+    """
+    hours = minutes // 60
+    mins = minutes % 60
+    return f"{hours:02d}:{mins:02d}"
+
+def partition(arr, low, high):
+    """
+    Partition the array using the rightmost element as pivot.
+    
+    Args:
+        arr (list): List of Aircraft objects
+        low (int): Starting index of the partition
+        high (int): Ending index of the partition
+    
+    Returns:
+        int: The partition index
+    """
+    # Select the rightmost element as the pivot value
+    pivot = arr[high].arrival
+    
+    # Initialize the index of smaller element
+    i = low - 1
+    
+    # Iterate through the partition range
+    for j in range(low, high):
+        # If current element is less than or equal to pivot
+        if arr[j].arrival <= pivot:
+            # Move the index forward and swap elements
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+    
+    # Place pivot in its final position
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    return i + 1
+
+def quicksort(arr, low, high):
+    """
+    Recursively sort the array using QuickSort algorithm.
+    
+    Args:
+        arr (list): List of Aircraft objects
+        low (int): Starting index of the subarray
+        high (int): Ending index of the subarray
+    
+    Returns:
+        list: Sorted list of Aircraft objects
+    """
+    # Only process if there are at least 2 elements
+    if low < high:
+        # Get the partition index
+        pi = partition(arr, low, high)
+        
+        # Recursively sort the left partition
+        quicksort(arr, low, pi - 1)
+        
+        # Recursively sort the right partition
+        quicksort(arr, pi + 1, high)
+    
+    # Return the sorted array
+    return arr
+
 def manual_sort_by_arrival(aircraft_list):
     """
     Sort the list of Aircraft objects in ascending order by their arrival time
-    using the QuickSort algorithm. This implementation uses the divide-and-conquer
-    strategy with a pivot element.
+    using the QuickSort algorithm.
 
     Time Complexity: O(n log n) average case
     Space Complexity: O(log n) due to recursion stack
@@ -60,32 +132,11 @@ def manual_sort_by_arrival(aircraft_list):
     Returns:
         list: The sorted list of Aircraft objects by arrival time
     """
-    def quicksort(arr, low, high):
-        if low < high:
-            # Find the partition index
-            pi = partition(arr, low, high)
-            
-            # Recursively sort the left part
-            quicksort(arr, low, pi - 1)
-            # Recursively sort the right part
-            quicksort(arr, pi + 1, high)
+    # Handle empty list case
+    if not aircraft_list:
+        return []
     
-    def partition(arr, low, high):
-        # Choose the rightmost element as pivot
-        pivot = arr[high].arrival
-        i = low - 1  # Index of smaller element
-        
-        for j in range(low, high):
-            # If current element is smaller than or equal to pivot
-            if arr[j].arrival <= pivot:
-                i += 1  # Increment index of smaller element
-                arr[i], arr[j] = arr[j], arr[i]
-        
-        # Place pivot in its correct position
-        arr[i + 1], arr[high] = arr[high], arr[i + 1]
-        return i + 1
-    
-    # Start QuickSort
+    # Sort the list using quicksort and return
     quicksort(aircraft_list, 0, len(aircraft_list) - 1)
     return aircraft_list
 
@@ -149,17 +200,22 @@ def interval_partitioning(aircrafts):
 if __name__ == "__main__":
     # Test the Interval Partitioning Algorithm
     aircrafts = [
-            Aircraft("TC-LSU", 480, 570),   # 08:00 - 09:30
-            Aircraft("TC-JSI", 525, 615),   # 08:45 - 10:15
-            Aircraft("TC-JTR", 540, 660),   # 09:00 - 11:00
-            Aircraft("TC-JOV", 600, 720),   # 10:00 - 12:00
-            Aircraft("TC-NBK", 750, 840),   # 12:30 - 14:00
-            Aircraft("TC-NCL", 780, 930),   # 13:00 - 15:30
-            Aircraft("D-AIDW", 870, 960),   # 14:30 - 16:00
-            Aircraft("SE-ROE", 960, 1080),  # 16:00 - 18:00
-        ]
+        Aircraft("TC-LSU", to_m("09:00"), to_m("10:30")),
+        Aircraft("TC-JSI", to_m("09:00"), to_m("12:30")),
+        Aircraft("TC-JTR", to_m("09:00"), to_m("10:30")),
+        Aircraft("TC-JOV", to_m("11:00"), to_m("12:30")),
+        Aircraft("TC-NBK", to_m("11:00"), to_m("14:00")),
+        Aircraft("TC-NCL", to_m("13:00"), to_m("14:30")),
+        Aircraft("TC-NCO", to_m("13:00"), to_m("14:30")),
+        Aircraft("TC-NCR", to_m("14:00"), to_m("16:30")),
+        Aircraft("TC-NDB", to_m("15:00"), to_m("16:30")),
+        Aircraft("TC-NDR", to_m("15:00"), to_m("16:30"))
+    ]
 
     num_gates, gate_assignments = interval_partitioning(aircrafts)
     print(f"Minimum number of gates needed: {num_gates}")
-    for i, gate in enumerate(gate_assignments):
-        print(f"Gate {i + 1}: {gate}")
+    
+    # Print assignments in HH:MM format
+    for i, gate in enumerate(gate_assignments, 1):
+        assignments = [f"{plane.code} ({to_hhmm(plane.arrival)}-{to_hhmm(plane.departure)})" for plane in gate]
+        print(f"Gate {i}: [{', '.join(assignments)}]")
